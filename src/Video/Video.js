@@ -194,15 +194,23 @@ export default function video(client) {
         var remoteStream = positions[streamPositions[evt.uid]];
         console.log("Stream removed: " + remoteStream.getId());
         try {
+        if(remoteStream!=localStream)
+        {
           remoteStream.stop();
+         }
         } catch(err) {
             console.log("peer-leave remote stream stop error");
         }
         if (streams.length == 1) {
-            const bigSteam = positions.big;
-            bigSteam.stop();
-            localStream.play('big');
-            bigSteam.play(streamPositions[localStream.getId()]);
+            if (remoteStream != localStream){
+                const bigSteam = positions.big;
+                bigSteam.stop();
+                localStream.play('big');
+                bigSteam.play(streamPositions[localStream.getId()]);
+            }else{
+                localStream.play('big');
+                bigSteam.play(streamPositions[localStream.getId()]);
+            }
             for (i=0;i<streams.length;i++){
                 sstream = positions['small' + (streams.length - 1)];
                 sstream.stop();
@@ -212,6 +220,8 @@ export default function video(client) {
         const lastStream = positions['small' + (streams.length - 1)];
         if (lastStream === remoteStream) {
           positions["small" + (streams.length - 1)] = null;
+          remoteStream.play('big');
+          bigSteam.play(streamPositions[remoteStream.getId()]);
           return;
         }
         var index = streams.indexOf(remoteStream);
