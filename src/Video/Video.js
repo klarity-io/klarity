@@ -72,13 +72,13 @@ function signalInit(name) {
   const session = signalClient.login(name, "_no_need_token");
   session.onLoginSuccess = function(uid) {
     /* Join a channel. */
-    var channel = session.channelJoin("abcd");
+    var channel = session.channelJoin("abcd1");
     channel.onChannelJoined = function() {
       chatChannel = channel;
       channel.onMessageChannelReceive = function(account, uid, msg) {
-        if (account === name) return;
         console.log(account, uid, msg);
-
+        const payload = JSON.parse(msg);
+        addTranscribe(payload.resultIndex, account, payload.interim_transcript || payload.final_transcript, account === name);
       };
       /* Send a channel message. */
       // channel.messageChannelSend("hello");
@@ -113,7 +113,7 @@ export default function video(client) {
   // Start coding here
   client.join(
     "3e30ad81f5ab46f685143d81f0666c6f",
-    "abcd",
+    "abcd1",
     name,
     function(uid) {
       
@@ -312,4 +312,18 @@ function Translator() {
     };
 
     var Google_Translate_API_KEY = 'YOUR_API_KEY';
+}
+
+const template = '<div class="message" id={{messageid}}><div class="text inline"><div class="name"></div><div class="msg"></div></div></div>';
+const templateOwn = '<div class="message own" id={{messageid}}><div class="text inline"><div class="name"></div><div class="msg"></div></div></div>';
+function addTranscribe(index, name, message, isOwn) {
+  let messageElement = document.getElementById(name + index);
+  if (!messageElement) {
+    const constainer = document.getElementById('history');
+    const newTemp = isOwn ? templateOwn.replace('{{messageid}}', name + index) : template.replace('{{messageid}}', name + index);
+    constainer.innerHTML += newTemp;
+    messageElement = document.getElementById(name + index);
+  }
+  messageElement.querySelector('.name').innerHTML = name;
+  messageElement.querySelector('.msg').innerHTML = message;
 }
