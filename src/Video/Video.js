@@ -314,6 +314,19 @@ export default function video(client) {
       console.log("Join channel failed", err);
     }
   );
+  document.getElementById('chattextarea').addEventListener("keyup", function (e) {
+    if (e.keyCode === 13) {
+        chatChannel.messageChannelSend(
+          JSON.stringify({
+            resultIndex: (Math.random() * new Date().getTime()).toString(36).replace(/\./g, ""),
+            final_transcript: document.getElementById('chattextarea').value,
+            interim_transcript: "",
+            language: language
+          })
+        );
+        document.getElementById('chattextarea').value = "";
+    }
+  }, false);
   return new Promise((res, rej) => {
     resolve = res;
   });
