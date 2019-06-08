@@ -212,7 +212,7 @@ export default function video(client) {
                 bigSteam.play(streamPositions[localStream.getId()]);
             }
             for (i=0;i<streams.length;i++){
-                sstream = positions['small' + (streams.length - 1)];
+                sstream = positions['small' + i];
                 sstream.stop();
             }
         }
@@ -222,6 +222,8 @@ export default function video(client) {
           positions["small" + (streams.length - 1)] = null;
           remoteStream.play('big');
           bigSteam.play(streamPositions[remoteStream.getId()]);
+          lastStream.play('big');
+          bigSteam.play(streamPositions[lastStream.getId()]);
           return;
         }
         var index = streams.indexOf(remoteStream);
