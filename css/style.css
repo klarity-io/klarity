@@ -91,7 +91,7 @@ body {
 .video-wrapper {
     background: #333;
 }
-video {
+.video {
     max-width: 100%;
     height: 120px;
 }
@@ -103,7 +103,7 @@ video {
 .master .vid-wrapper {
     padding: 1.5% 8px;
 }
-.master video {
+.master .video {
     width: 100%;
     height: calc(100vh - 200px);
 }
