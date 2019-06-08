@@ -2,6 +2,8 @@
 import AgoraRTC from "agora-rtc-sdk";
 import AgoraSignal from "../AgoraSig-1.4.0";
 import Controls from "../Controls/Controls";
+const Google = require("./config.json");
+
 // import localConfig from '../../localconfig.js';
 
 let remoteContainer = document.getElementById("remote");
@@ -221,17 +223,25 @@ export default function video(client) {
         var remoteStream = positions[streamPositions[evt.uid]];
         console.log("Stream removed: " + remoteStream.getId());
         try {
+        if(remoteStream!=localStream)
+        {
           remoteStream.stop();
+         }
         } catch(err) {
             console.log("peer-leave remote stream stop error");
         }
         if (streams.length == 1) {
-            const bigSteam = positions.big;
-            bigSteam.stop();
-            localStream.play('big');
-            bigSteam.play(streamPositions[localStream.getId()]);
+            if (remoteStream != localStream){
+                const bigSteam = positions.big;
+                bigSteam.stop();
+                localStream.play('big');
+                bigSteam.play(streamPositions[localStream.getId()]);
+            }else{
+                localStream.play('big');
+                bigSteam.play(streamPositions[localStream.getId()]);
+            }
             for (i=0;i<streams.length;i++){
-                sstream = positions['small' + (streams.length - 1)];
+                sstream = positions['small' + i];
                 sstream.stop();
             }
         }
@@ -239,6 +249,10 @@ export default function video(client) {
         const lastStream = positions['small' + (streams.length - 1)];
         if (lastStream === remoteStream) {
           positions["small" + (streams.length - 1)] = null;
+          remoteStream.play('big');
+          bigSteam.play(streamPositions[remoteStream.getId()]);
+          lastStream.play('big');
+          bigSteam.play(streamPositions[lastStream.getId()]);
           return;
         }
         var index = streams.indexOf(remoteStream);
@@ -346,7 +360,7 @@ function startTranscribe(language) {
 function translateLanguage(text, config) {
   console.log('translate ' + text);
   config = config || {};
-  var api_key = config.api_key || "";
+  var api_key = config.api_key || Google.google_api_key;
 
   var newScript = document.createElement("script");
   newScript.type = "text/javascript";
