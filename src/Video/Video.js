@@ -119,6 +119,7 @@ export default function video(client) {
           recognition.lang = "en-IN";
           recognition.interimResults = true;
           startTranscribe();
+
           Controls({localStream: localStream, recognition: recognition, client: client});
           client.publish(localStream, function(err) {
             console.log("Publish local stream error: " + err);
@@ -196,4 +197,43 @@ function startTranscribe() {
 
   };
   recognition.start();
+}
+
+function Translator() {
+    this.translateLanguage = function(text, config) {
+
+        config = config || { };
+        var api_key = config.api_key || Google_Translate_API_KEY;
+
+        var newScript = document.createElement('script');
+        newScript.type = 'text/javascript';
+
+        var sourceText = encodeURIComponent(text);
+
+        var randomNumber = 'method' + (Math.random() * new Date().getTime()).toString(36).replace( /\./g , '');
+        window[randomNumber] = function(response) {
+            if (response.data && response.data.translations[0] && config.callback) {
+                config.callback(response.data.translations[0].translatedText);
+                return;
+            }
+
+            if(response.error && response.error.message == 'Daily Limit Exceeded') {
+                config.callback('Google says, "Daily Limit Exceeded". Please try this experiment a few hours later.');
+                return;
+            }
+
+            if (response.error) {
+                console.error(response.error.message);
+                return;
+            }
+
+            console.error(response);
+        };
+
+        var source = 'https://www.googleapis.com/language/translate/v2?key=' + api_key + '&target=' + (config.to || 'en-US') + ''&source=' + (config.from || 'en-US') + '&callback=window.' + randomNumber + '&q=' + sourceText;
+        newScript.src = source;
+        document.getElementsByTagName('head')[0].appendChild(newScript);
+    };
+
+    var Google_Translate_API_KEY = 'YOUR_API_KEY';
 }
