@@ -65,10 +65,10 @@ let handleFail = function(err) {
   console.log("Error : ", err);
 };
 
-function signalInit() {
+function signalInit(name) {
   const signalClient = AgoraSignal("3e30ad81f5ab46f685143d81f0666c6f");
-  const queryString = location.search.split("=");
-  const name = queryString[1] ? queryString[1] : "unknownuser";
+  // const queryString = location.search.split("=");
+  // const name = queryString[1] ? queryString[1] : null;
   const session = signalClient.login(name, "_no_need_token");
   session.onLoginSuccess = function(uid) {
     /* Join a channel. */
@@ -97,7 +97,9 @@ function signalInit() {
  * @description Function takes in a client and returns a promise which will resolve {localStream and client}
  */
 export default function video(client) {
-  signalInit();
+  const queryString = location.search.split("=");
+  const name = queryString[1] ? queryString[1] : null;
+  signalInit(name);
   let resolve;
   client.init(
     "3e30ad81f5ab46f685143d81f0666c6f",
@@ -112,7 +114,7 @@ export default function video(client) {
   client.join(
     "3e30ad81f5ab46f685143d81f0666c6f",
     "abcd",
-    null,
+    name,
     function(uid) {
       
       localStream = AgoraRTC.createStream({
@@ -196,9 +198,6 @@ export default function video(client) {
         bigSteam.play(streamPositions[remoteStream.getId()]);
         positions.big = remoteStream;
         positions[streamPositions[remoteStream.getId()]] = localStream;
-        
-        
-        
       });
       client.on("stream-subscribed", function(evt) {
         var remoteStream = evt.stream;
