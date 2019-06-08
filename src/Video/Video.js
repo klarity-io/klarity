@@ -76,11 +76,9 @@ function signalInit(name) {
     channel.onChannelJoined = function() {
       chatChannel = channel;
       channel.onMessageChannelReceive = function(account, uid, msg) {
-        if (account === name) return;
         console.log(account, uid, msg);
         const payload = JSON.parse(msg);
-        addTranscribe(payload.resultIndex, account, payload.interim_transcript || payload.final_transcript);
-
+        addTranscribe(payload.resultIndex, account, payload.interim_transcript || payload.final_transcript, account === name);
       };
       /* Send a channel message. */
       // channel.messageChannelSend("hello");
@@ -311,11 +309,12 @@ function Translator() {
 }
 
 const template = '<div class="message" id={{messageid}}><div class="text inline"><div class="name"></div><div class="msg"></div></div></div>';
-function addTranscribe(index, name, message) {
+const templateOwn = '<div class="message own" id={{messageid}}><div class="text inline"><div class="name"></div><div class="msg"></div></div></div>';
+function addTranscribe(index, name, message, isOwn) {
   let messageElement = document.getElementById(name + index);
   if (!messageElement) {
     const constainer = document.getElementById('history');
-    const newTemp = template.replace('{{messageid}}', name + index);
+    const newTemp = isOwn ? templateOwn.replace('{{messageid}}', name + index) : template.replace('{{messageid}}', name + index);
     constainer.innerHTML += newTemp;
     messageElement = document.getElementById(name + index);
   }
