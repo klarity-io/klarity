@@ -95,6 +95,8 @@ function signalInit(name, language) {
               console.log('muting this stream', positions[streamPositions[account]]);
               positions[streamPositions[account]].muteAudio();
             }
+          } else {
+            differentLanguage.delete(account);
           }
           return;
         }
@@ -359,7 +361,7 @@ function startTranscribe(language) {
 function translateLanguage(text, config) {
   console.log('translate ' + text);
   config = config || {};
-  var api_key = config.api_key || Google.google_api_key;
+  var api_key = config.api_key || "";
 
   var newScript = document.createElement("script");
   newScript.type = "text/javascript";
