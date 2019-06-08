@@ -124,6 +124,7 @@ export default function video(client) {
         screen: false
       });
       window.localStream = localStream;
+      localStream.setVideoProfile("480p")
       localStream.init(
         function() {
           console.log("getUserMedia successfully");
