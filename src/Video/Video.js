@@ -2,6 +2,8 @@
 import AgoraRTC from "agora-rtc-sdk";
 import AgoraSignal from "../AgoraSig-1.4.0";
 import Controls from "../Controls/Controls";
+const Google = require("./config.json");
+
 // import localConfig from '../../localconfig.js';
 
 let remoteContainer = document.getElementById("remote");
@@ -72,7 +74,7 @@ function signalInit(name, language) {
   const session = signalClient.login(name, "_no_need_token");
   session.onLoginSuccess = function (uid) {
     /* Join a channel. */
-    var channel = session.channelJoin("abcd3");
+    var channel = session.channelJoin("abcd4");
     channel.onChannelJoined = function () {
       chatChannel = channel;
       channel.onMessageChannelReceive = function (account, uid, msg) {
@@ -132,7 +134,7 @@ export default function video(client) {
   // Start coding here
   client.join(
     "3e30ad81f5ab46f685143d81f0666c6f",
-    "abcd3",
+    "abcd4",
     name,
     function (uid) {
       localStream = AgoraRTC.createStream({
@@ -307,7 +309,7 @@ function startTranscribe(language) {
 function translateLanguage(text, config) {
   console.log('translate ' + text);
   config = config || {};
-  var api_key = config.api_key || "";
+  var api_key = config.api_key || Google.google_api_key;
 
   var newScript = document.createElement("script");
   newScript.type = "text/javascript";
