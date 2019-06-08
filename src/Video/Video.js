@@ -19,6 +19,7 @@ let positions = {
 };
 let streamPositions = {};
 let localStream = null;
+const differentLanguage = new Set();
 /**
  * @name addVideoStream
  * @param streamId
@@ -72,12 +73,29 @@ function signalInit(name, language) {
   const session = signalClient.login(name, "_no_need_token");
   session.onLoginSuccess = function (uid) {
     /* Join a channel. */
-    var channel = session.channelJoin("abcd3");
+    var channel = session.channelJoin("abcd5");
     channel.onChannelJoined = function () {
       chatChannel = channel;
+      chatChannel.messageChannelSend(
+        JSON.stringify({
+          init: true,
+          language: language
+        })
+      );
       channel.onMessageChannelReceive = function (account, uid, msg) {
         console.log(account, uid, msg);
         const payload = JSON.parse(msg);
+        if (payload.init) {
+          if (payload.language !== language) {
+            console.log(account + 'has different language');
+            differentLanguage.add(account);
+            if (positions[streamPositions[account]]) {
+              console.log('muting this stream', positions[streamPositions[account]]);
+              positions[streamPositions[account]].muteAudio();
+            }
+            return;
+          }
+        }
         if (payload.language === language) {
           addTranscribe(
             payload.resultIndex,
@@ -96,6 +114,17 @@ function signalInit(name, language) {
                 translated,
                 account === name
               );
+              if (!payload.final_transcript) return;
+              var msg = new SpeechSynthesisUtterance();
+              // Set the text.
+              msg.text = translated;
+              
+              // Set the attributes.
+              msg.volume = 1;
+              msg.rate = 1;
+              msg.pitch = 1;
+              msg.voice = speechSynthesis.getVoices().filter(function(voice) { return voice.name == 'Google हिन्दी'; })[0];
+              speechSynthesis.speak(msg);
             }
           })
           
@@ -132,7 +161,7 @@ export default function video(client) {
   // Start coding here
   client.join(
     "3e30ad81f5ab46f685143d81f0666c6f",
-    "abcd3",
+    "abcd5",
     name,
     function (uid) {
       localStream = AgoraRTC.createStream({
@@ -221,17 +250,17 @@ export default function video(client) {
         lastStream.play(streamPositions[remoteStream.getId()]);
       });
       client.on("active-speaker", function (evt) {
-        var remoteStream = positions[streamPositions[evt.uid]];
-        if (!remoteStream) return;
-        console.log("active-speaker: " + remoteStream.getId());
-        if (positions.big === remoteStream) return;
-        const bigSteam = positions.big;
-        remoteStream.stop();
-        bigSteam.stop();
-        remoteStream.play("big");
-        bigSteam.play(streamPositions[remoteStream.getId()]);
-        positions.big = remoteStream;
-        positions[streamPositions[remoteStream.getId()]] = localStream;
+        // var remoteStream = positions[streamPositions[evt.uid]];
+        // if (!remoteStream) return;
+        // console.log("active-speaker: " + remoteStream.getId());
+        // if (positions.big === remoteStream) return;
+        // const bigSteam = positions.big;
+        // remoteStream.stop();
+        // bigSteam.stop();
+        // remoteStream.play("big");
+        // bigSteam.play(streamPositions[remoteStream.getId()]);
+        // positions.big = remoteStream;
+        // positions[streamPositions[remoteStream.getId()]] = localStream;
       });
       client.on("stream-subscribed", function (evt) {
         var remoteStream = evt.stream;
@@ -254,6 +283,16 @@ export default function video(client) {
           streamPositions[remoteStream.getId()] =
             "small" + (streams.length - 1);
         }
+        if (differentLanguage.has(remoteStream.getId())) {
+          console.log('muting ' + remoteStream.getId());
+          remoteStream.muteAudio();
+        }
+        chatChannel.messageChannelSend(
+          JSON.stringify({
+            init: true,
+            language: language
+          })
+        );
       });
     },
     function (err) {
@@ -359,6 +398,8 @@ function addTranscribe(index, name, message, isOwn) {
   }
   messageElement.querySelector(".name").innerHTML = name;
   messageElement.querySelector(".msg").innerHTML = message;
+  var objDiv = document.getElementById("history");
+  objDiv.scrollTop = objDiv.scrollHeight;
 }
 
 function parseQueryStringToDictionary(queryString) {
