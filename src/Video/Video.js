@@ -167,8 +167,8 @@ export default function video(client) {
         });
       });
       client.on("peer-leave", function(evt) {
-        var remoteStream = evt.stream;
-        console.log("New stream removed: " + remoteStream.getId());
+        var remoteStream = positions[streamPositions[evt.uid]];
+        console.log("Stream removed: " + remoteStream.getId());
         try {
           remoteStream.stop();
         } catch(err) {
