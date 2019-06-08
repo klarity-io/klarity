@@ -2,3 +2,4 @@ node_modules
 .dev
 .fusebox
 package-lock.json
+src/Video/config.json
