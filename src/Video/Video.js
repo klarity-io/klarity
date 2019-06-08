@@ -1,8 +1,7 @@
 // import "./Video.css";
 import AgoraRTC from "agora-rtc-sdk";
 import AgoraSignal from "../AgoraSig-1.4.0";
-import Controls from '../Controls/Controls'
-import hark from 'hark';
+import Controls from "../Controls/Controls";
 
 let remoteContainer = document.getElementById("remote");
 let remoteMinimized = document.getElementById("minimized-remote");
@@ -11,13 +10,13 @@ let chatChannel = null;
 let recognition = null;
 let streams = [];
 let positions = {
-  "big": null,
-  "small1": null,
-  "small2": null,
-  "small3": null,
-  "small4": null,
+  big: null,
+  small1: null,
+  small2: null,
+  small3: null,
+  small4: null
 };
-let streamPositions = {}
+let streamPositions = {};
 let localStream = null;
 /**
  * @name addVideoStream
@@ -61,32 +60,49 @@ function removeVideoStream(evt) {
  * @param err - error thrown by any function
  * @description Helper function to handle errors
  */
-let handleFail = function(err) {
+let handleFail = function (err) {
   console.log("Error : ", err);
 };
 
-function signalInit(name) {
+function signalInit(name, language) {
   const signalClient = AgoraSignal("3e30ad81f5ab46f685143d81f0666c6f");
   // const queryString = location.search.split("=");
   // const name = queryString[1] ? queryString[1] : null;
   const session = signalClient.login(name, "_no_need_token");
-  session.onLoginSuccess = function(uid) {
+  session.onLoginSuccess = function (uid) {
     /* Join a channel. */
-    var channel = session.channelJoin("abcd1");
-    channel.onChannelJoined = function() {
+    var channel = session.channelJoin("abcd2");
+    channel.onChannelJoined = function () {
       chatChannel = channel;
-      channel.onMessageChannelReceive = function(account, uid, msg) {
+      channel.onMessageChannelReceive = function (account, uid, msg) {
         console.log(account, uid, msg);
         const payload = JSON.parse(msg);
-        addTranscribe(payload.resultIndex, account, payload.interim_transcript || payload.final_transcript, account === name);
+        if (payload.language === language) {
+          addTranscribe(
+            payload.resultIndex,
+            account,
+            payload.interim_transcript || payload.final_transcript,
+            account === name
+          );
+        } else {
+          translateLanguage(payload.interim_transcript || payload.final_transcript, {
+            from: payload.language,
+            to: language,
+            callback: function(translated) {
+              addTranscribe(
+                payload.resultIndex,
+                account,
+                translated,
+                account === name
+              );
+            }
+          })
+          
+        }
       };
-      /* Send a channel message. */
-      // channel.messageChannelSend("hello");
-      /* Logout of the system. */
-      // session.logout();
     };
   };
-  session.onLogout = function(ecode) {
+  session.onLogout = function (ecode) {
     /* Set the onLogout callback. */
   };
 }
@@ -97,26 +113,27 @@ function signalInit(name) {
  * @description Function takes in a client and returns a promise which will resolve {localStream and client}
  */
 export default function video(client) {
-  const queryString = location.search.split("=");
-  const name = queryString[1] ? queryString[1] : null;
-  signalInit(name);
+  var queryString = document.location.search;
+  var dict = parseQueryStringToDictionary(queryString);
+  const name = dict.user;
+  const language = dict.lang;
+  signalInit(name, language);
   let resolve;
   client.init(
     "3e30ad81f5ab46f685143d81f0666c6f",
-    function() {
+    function () {
       console.log("AgoraRTC client initialized");
     },
-    function(err) {
+    function (err) {
       console.log("AgoraRTC client init failed", err);
     }
   );
   // Start coding here
   client.join(
     "3e30ad81f5ab46f685143d81f0666c6f",
-    "abcd1",
+    "abcd2",
     name,
-    function(uid) {
-      
+    function (uid) {
       localStream = AgoraRTC.createStream({
         streamID: uid,
         audio: true,
@@ -126,46 +143,47 @@ export default function video(client) {
       window.localStream = localStream;
       localStream.setVideoProfile("480p")
       localStream.init(
-        function() {
+        function () {
           console.log("getUserMedia successfully");
           streams.push(localStream);
           if (positions.big) {
-            localStream.play('small' + (streams.length - 1));
-            positions['small' + (streams.length - 1)] = localStream;
-            streamPositions[localStream.getId()] = 'small' + (streams.length - 1);
+            localStream.play("small" + (streams.length - 1));
+            positions["small" + (streams.length - 1)] = localStream;
+            streamPositions[localStream.getId()] =
+              "small" + (streams.length - 1);
           } else {
             localStream.play("big");
             positions.big = localStream;
-            streamPositions[localStream.getId()] = 'big';
+            streamPositions[localStream.getId()] = "big";
           }
           recognition = new webkitSpeechRecognition();
           recognition.continuous = true;
           recognition.lang = "en-IN";
           recognition.interimResults = true;
-          startTranscribe();
+          startTranscribe(language);
           // Controls({localStream: localStream, recognition: recognition, client: client});
-          client.publish(localStream, function(err) {
+          client.publish(localStream, function (err) {
             console.log("Publish local stream error: " + err);
           });
         },
-        function(err) {
+        function (err) {
           console.log("getUserMedia failed", err);
         }
       );
       console.log("User " + uid + " join channel successfully");
-      client.on("stream-published", function(evt) {
+      client.on("stream-published", function (evt) {
         console.log("Publish local stream successfully");
       });
 
-      client.on("stream-added", function(evt) {
+      client.on("stream-added", function (evt) {
         var stream = evt.stream;
         console.log("New stream added: " + stream.getId());
 
-        client.subscribe(stream, function(err) {
+        client.subscribe(stream, function (err) {
           console.log("Subscribe stream failed", err);
         });
       });
-      client.on("peer-leave", function(evt) {
+      client.on("peer-leave", function (evt) {
         var remoteStream = positions[streamPositions[evt.uid]];
         console.log("Stream removed: " + remoteStream.getId());
         try {
@@ -186,7 +204,7 @@ export default function video(client) {
         
         const lastStream = positions['small' + (streams.length - 1)];
         if (lastStream === remoteStream) {
-          positions['small' + (streams.length - 1)] = null;
+          positions["small" + (streams.length - 1)] = null;
           return;
         }
         var index = streams.indexOf(remoteStream);
@@ -197,7 +215,7 @@ export default function video(client) {
         lastStream.stop();
         lastStream.play(streamPositions[remoteStream.getId()]);
       });
-      client.on("active-speaker", function(evt) {
+      client.on("active-speaker", function (evt) {
         var remoteStream = positions[streamPositions[evt.uid]];
         if (!remoteStream) return;
         console.log("active-speaker: " + remoteStream.getId());
@@ -205,12 +223,12 @@ export default function video(client) {
         const bigSteam = positions.big;
         remoteStream.stop();
         bigSteam.stop();
-        remoteStream.play('big');
+        remoteStream.play("big");
         bigSteam.play(streamPositions[remoteStream.getId()]);
         positions.big = remoteStream;
         positions[streamPositions[remoteStream.getId()]] = localStream;
       });
-      client.on("stream-subscribed", function(evt) {
+      client.on("stream-subscribed", function (evt) {
         var remoteStream = evt.stream;
         console.log(
           "Subscribe remote stream successfully: " + remoteStream.getId()
@@ -219,20 +237,21 @@ export default function video(client) {
         streams.push(remoteStream);
         if (positions.big === localStream) {
           localStream.stop();
-          localStream.play('small' + (streams.length - 1));
-          positions['small' + (streams.length - 1)] = localStream;
-          streamPositions[localStream.getId()] = 'small' + (streams.length - 1);
+          localStream.play("small" + (streams.length - 1));
+          positions["small" + (streams.length - 1)] = localStream;
+          streamPositions[localStream.getId()] = "small" + (streams.length - 1);
           remoteStream.play("big");
           positions.big = remoteStream;
-          streamPositions[remoteStream.getId()] = 'big';
+          streamPositions[remoteStream.getId()] = "big";
         } else {
-          remoteStream.play('small' + (streams.length - 1));
-          positions['small' + (streams.length - 1)] = remoteStream;
-          streamPositions[remoteStream.getId()] = 'small' + (streams.length - 1);
+          remoteStream.play("small" + (streams.length - 1));
+          positions["small" + (streams.length - 1)] = remoteStream;
+          streamPositions[remoteStream.getId()] =
+            "small" + (streams.length - 1);
         }
       });
     },
-    function(err) {
+    function (err) {
       console.log("Join channel failed", err);
     }
   );
@@ -241,22 +260,20 @@ export default function video(client) {
   });
 }
 
-
-function startTranscribe() {
-
-  recognition.onstart = function() {
-    console.info('started recognition');
+function startTranscribe(language) {
+  recognition.onstart = function () {
+    console.info("started recognition");
   };
 
-  recognition.onerror = function(event) {
+  recognition.onerror = function (event) {
     console.error(event.error);
   };
 
-  recognition.onresult = function(event) {
+  recognition.onresult = function (event) {
     console.log(event);
-    var interim_transcript = '';
-    var final_transcript = '';
-    if (typeof(event.results) == 'undefined') {
+    var interim_transcript = "";
+    var final_transcript = "";
+    if (typeof event.results == "undefined") {
       recognition.onend = null;
       recognition.stop();
       upgrade();
@@ -270,65 +287,104 @@ function startTranscribe() {
       }
     }
     if (!chatChannel) return;
-    chatChannel.messageChannelSend(JSON.stringify({
-      resultIndex: event.resultIndex,
-      final_transcript: final_transcript,
-      interim_transcript: interim_transcript,
-    }));
-
+    chatChannel.messageChannelSend(
+      JSON.stringify({
+        resultIndex: event.resultIndex,
+        final_transcript: final_transcript,
+        interim_transcript: interim_transcript,
+        language: language
+      })
+    );
   };
   recognition.start();
 }
 
-function Translator() {
-    this.translateLanguage = function(text, config) {
+function translateLanguage(text, config) {
+  console.log('translate ' + text);
+  var Google_Translate_API_KEY = "";
+  config = config || {};
+  var api_key = config.api_key || Google_Translate_API_KEY;
 
-        config = config || { };
-        var api_key = config.api_key || Google_Translate_API_KEY;
+  var newScript = document.createElement("script");
+  newScript.type = "text/javascript";
 
-        var newScript = document.createElement('script');
-        newScript.type = 'text/javascript';
+  var sourceText = encodeURIComponent(text);
 
-        var sourceText = encodeURIComponent(text);
+  var randomNumber =
+    "method" +
+    (Math.random() * new Date().getTime()).toString(36).replace(/\./g, "");
+  window[randomNumber] = function (response) {
+    if (response.data && response.data.translations[0] && config.callback) {
+      config.callback(response.data.translations[0].translatedText);
+      return;
+    }
 
-        var randomNumber = 'method' + (Math.random() * new Date().getTime()).toString(36).replace( /\./g , '');
-        window[randomNumber] = function(response) {
-            if (response.data && response.data.translations[0] && config.callback) {
-                config.callback(response.data.translations[0].translatedText);
-                return;
-            }
+    if (response.error && response.error.message == "Daily Limit Exceeded") {
+      // config.callback(
+      //   'Google says, "Daily Limit Exceeded". Please try this experiment a few hours later.'
+      // );
+      return;
+    }
 
-            if(response.error && response.error.message == 'Daily Limit Exceeded') {
-                config.callback('Google says, "Daily Limit Exceeded". Please try this experiment a few hours later.');
-                return;
-            }
+    if (response.error) {
+      console.error(response.error.message);
+      return;
+    }
 
-            if (response.error) {
-                console.error(response.error.message);
-                return;
-            }
+    console.error(response);
+  };
 
-            console.error(response);
-        };
-
-        var source = 'https://www.googleapis.com/language/translate/v2?key=' + api_key + '&target=' + (config.to || 'en-US') + '&source=' + (config.from || 'en-US') + '&callback=window.' + randomNumber + '&q=' + sourceText;
-        newScript.src = source;
-        document.getElementsByTagName('head')[0].appendChild(newScript);
-    };
-
-    var Google_Translate_API_KEY = 'YOUR_API_KEY';
+  var source = `https://www.googleapis.com/language/translate/v2?key=${api_key}&target=${config.to}&source=${config.from}&callback=window.${randomNumber}&q=${sourceText}`;
+  newScript.src = source;
+  document.getElementsByTagName("head")[0].appendChild(newScript);  
 }
 
-const template = '<div class="message" id={{messageid}}><div class="text inline"><div class="name"></div><div class="msg"></div></div></div>';
-const templateOwn = '<div class="message own" id={{messageid}}><div class="text inline"><div class="name"></div><div class="msg"></div></div></div>';
+const template =
+  '<div class="message" id={{messageid}}><div class="text inline"><div class="name"></div><div class="msg"></div></div></div>';
+const templateOwn =
+  '<div class="message own" id={{messageid}}><div class="text inline"><div class="name"></div><div class="msg"></div></div></div>';
 function addTranscribe(index, name, message, isOwn) {
   let messageElement = document.getElementById(name + index);
   if (!messageElement) {
-    const constainer = document.getElementById('history');
-    const newTemp = isOwn ? templateOwn.replace('{{messageid}}', name + index) : template.replace('{{messageid}}', name + index);
+    const constainer = document.getElementById("history");
+    const newTemp = isOwn
+      ? templateOwn.replace("{{messageid}}", name + index)
+      : template.replace("{{messageid}}", name + index);
     constainer.innerHTML += newTemp;
     messageElement = document.getElementById(name + index);
   }
-  messageElement.querySelector('.name').innerHTML = name;
-  messageElement.querySelector('.msg').innerHTML = message;
+  messageElement.querySelector(".name").innerHTML = name;
+  messageElement.querySelector(".msg").innerHTML = message;
+}
+
+function parseQueryStringToDictionary(queryString) {
+  var dictionary = {};
+
+  // remove the '?' from the beginning of the
+  // if it exists
+  if (queryString.indexOf("?") === 0) {
+    queryString = queryString.substr(1);
+  }
+
+  // Step 1: separate out each key/value pair
+  var parts = queryString.split("&");
+
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    // Step 2: Split Key/Value pair
+    var keyValuePair = p.split("=");
+
+    // Step 3: Add Key/Value pair to Dictionary object
+    var key = keyValuePair[0];
+    var value = keyValuePair[1];
+
+    // decode URI encoded string
+    value = decodeURIComponent(value);
+    value = value.replace(/\+/g, " ");
+
+    dictionary[key] = value;
+  }
+
+  // Step 4: Return Dictionary Object
+  return dictionary;
 }
