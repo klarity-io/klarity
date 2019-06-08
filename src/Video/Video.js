@@ -95,8 +95,8 @@ function signalInit(name, language) {
               console.log('muting this stream', positions[streamPositions[account]]);
               positions[streamPositions[account]].muteAudio();
             }
-            return;
           }
+          return;
         }
         if (payload.language === language) {
           addTranscribe(
@@ -128,8 +128,7 @@ function signalInit(name, language) {
               msg.voice = speechSynthesis.getVoices().filter(function(voice) { return voice.name == 'Google हिन्दी'; })[0];
               speechSynthesis.speak(msg);
             }
-          })
-          
+          });
         }
       };
     };
