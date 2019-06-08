@@ -141,6 +141,7 @@ export default function video(client) {
         screen: false
       });
       window.localStream = localStream;
+      localStream.setVideoProfile("480p")
       localStream.init(
         function () {
           console.log("getUserMedia successfully");
@@ -187,9 +188,17 @@ export default function video(client) {
         console.log("Stream removed: " + remoteStream.getId());
         try {
           remoteStream.stop();
-        } catch (err) { }
-
-        const lastStream = positions["small" + (streams.length - 1)];
+        } catch(err) {
+            console.log("peer-leave remote stream stop error");
+        }
+        if (streams.length == 1) {
+            const bigSteam = positions.big;
+            bigSteam.stop();
+            localStream.play('big');
+            bigSteam.play(streamPositions[localStream.getId()]);
+        }
+        
+        const lastStream = positions['small' + (streams.length - 1)];
         if (lastStream === remoteStream) {
           positions["small" + (streams.length - 1)] = null;
           return;
