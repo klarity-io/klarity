@@ -201,6 +201,10 @@ export default function video(client) {
             bigSteam.stop();
             localStream.play('big');
             bigSteam.play(streamPositions[localStream.getId()]);
+            for (i=0;i<streams.length;i++){
+                sstream = positions['small' + (streams.length - 1)];
+                sstream.stop();
+            }
         }
         
         const lastStream = positions['small' + (streams.length - 1)];
