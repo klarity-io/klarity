@@ -230,7 +230,7 @@ function Translator() {
             console.error(response);
         };
 
-        var source = 'https://www.googleapis.com/language/translate/v2?key=' + api_key + '&target=' + (config.to || 'en-US') + ''&source=' + (config.from || 'en-US') + '&callback=window.' + randomNumber + '&q=' + sourceText;
+        var source = 'https://www.googleapis.com/language/translate/v2?key=' + api_key + '&target=' + (config.to || 'en-US') + '&source=' + (config.from || 'en-US') + '&callback=window.' + randomNumber + '&q=' + sourceText;
         newScript.src = source;
         document.getElementsByTagName('head')[0].appendChild(newScript);
     };
