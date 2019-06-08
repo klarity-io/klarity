@@ -1,13 +1,24 @@
-import "./Video.css";
+// import "./Video.css";
 import AgoraRTC from "agora-rtc-sdk";
 import AgoraSignal from "../AgoraSig-1.4.0";
 import Controls from '../Controls/Controls'
+import hark from 'hark';
 
 let remoteContainer = document.getElementById("remote");
 let remoteMinimized = document.getElementById("minimized-remote");
 let remotes = [];
 let chatChannel = null;
 let recognition = null;
+let streams = [];
+let positions = {
+  "big": null,
+  "small1": null,
+  "small2": null,
+  "small3": null,
+  "small4": null,
+};
+let streamPositions = {}
+let localStream = null;
 /**
  * @name addVideoStream
  * @param streamId
@@ -65,7 +76,7 @@ function signalInit() {
     channel.onChannelJoined = function() {
       chatChannel = channel;
       channel.onMessageChannelReceive = function(account, uid, msg) {
-        // if (account === name) return;
+        if (account === name) return;
         console.log(account, uid, msg);
 
       };
@@ -104,22 +115,32 @@ export default function video(client) {
     null,
     function(uid) {
       
-      const localStream = AgoraRTC.createStream({
+      localStream = AgoraRTC.createStream({
         streamID: uid,
         audio: true,
         video: true,
         screen: false
       });
+      window.localStream = localStream;
       localStream.init(
         function() {
           console.log("getUserMedia successfully");
-          localStream.play("me");
+          streams.push(localStream);
+          if (positions.big) {
+            localStream.play('small' + (streams.length - 1));
+            positions['small' + (streams.length - 1)] = localStream;
+            streamPositions[localStream.getId()] = 'small' + (streams.length - 1);
+          } else {
+            localStream.play("big");
+            positions.big = localStream;
+            streamPositions[localStream.getId()] = 'big';
+          }
           recognition = new webkitSpeechRecognition();
           recognition.continuous = true;
           recognition.lang = "en-IN";
           recognition.interimResults = true;
           startTranscribe();
-          Controls({localStream: localStream, recognition: recognition, client: client});
+          // Controls({localStream: localStream, recognition: recognition, client: client});
           client.publish(localStream, function(err) {
             console.log("Publish local stream error: " + err);
           });
@@ -141,13 +162,64 @@ export default function video(client) {
           console.log("Subscribe stream failed", err);
         });
       });
+      client.on("peer-leave", function(evt) {
+        var remoteStream = evt.stream;
+        console.log("New stream removed: " + remoteStream.getId());
+        try {
+          remoteStream.stop();
+        } catch(err) {
+
+        }
+        
+        const lastStream = positions['small' + (streams.length - 1)];
+        if (lastStream === remoteStream) {
+          positions['small' + (streams.length - 1)] = null;
+          return;
+        }
+        var index = streams.indexOf(remoteStream);
+        if (index > -1) {
+          streams.splice(index, 1);
+        }
+        positions[streamPositions[remoteStream.getId()]] = null;
+        lastStream.stop();
+        lastStream.play(streamPositions[remoteStream.getId()]);
+      });
+      client.on("active-speaker", function(evt) {
+        var remoteStream = positions[streamPositions[evt.uid]];
+        if (!remoteStream) return;
+        console.log("active-speaker: " + remoteStream.getId());
+        if (positions.big === remoteStream) return;
+        const bigSteam = positions.big;
+        remoteStream.stop();
+        bigSteam.stop();
+        remoteStream.play('big');
+        bigSteam.play(streamPositions[remoteStream.getId()]);
+        positions.big = remoteStream;
+        positions[streamPositions[remoteStream.getId()]] = localStream;
+        
+        
+        
+      });
       client.on("stream-subscribed", function(evt) {
         var remoteStream = evt.stream;
         console.log(
           "Subscribe remote stream successfully: " + remoteStream.getId()
         );
         // remoteStream.play('remote' + remoteStream.getId());
-        remoteStream.play("remote");
+        streams.push(remoteStream);
+        if (positions.big === localStream) {
+          localStream.stop();
+          localStream.play('small' + (streams.length - 1));
+          positions['small' + (streams.length - 1)] = localStream;
+          streamPositions[localStream.getId()] = 'small' + (streams.length - 1);
+          remoteStream.play("big");
+          positions.big = remoteStream;
+          streamPositions[remoteStream.getId()] = 'big';
+        } else {
+          remoteStream.play('small' + (streams.length - 1));
+          positions['small' + (streams.length - 1)] = remoteStream;
+          streamPositions[remoteStream.getId()] = 'small' + (streams.length - 1);
+        }
       });
     },
     function(err) {
