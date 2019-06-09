@@ -214,6 +214,7 @@ export default function video(client) {
       client.on("peer-leave", function (evt) {
         var remoteStream = streamsMap.get(evt.uid);
         console.log("Stream removed: " + remoteStream.getId());
+        streamsMap.delete(evt.uid);
         try {
         if(remoteStream!=localStream)
         {
@@ -239,15 +240,17 @@ export default function video(client) {
         //         sstream.stop();
         //     }
         // }
-        
         const lastStream = positions['small' + streamsMap.size];
         if (lastStream === remoteStream) {
           positions["small" + streamsMap.size] = null;
           return;
         }
-        lastStream.stop();
-        lastStream.play(streamPositions[evt.uid]);
-        positions[streamPositions[evt.uid]] = lastStream;
+        if (lastStream) {
+          lastStream.stop();
+          lastStream.play(streamPositions[evt.uid]);
+          positions[streamPositions[evt.uid]] = lastStream;
+        }
+        
       });
       client.on("stream-subscribed", function (evt) {
         var remoteStream = evt.stream;
@@ -265,7 +268,7 @@ export default function video(client) {
         
         // remoteStream.play('remote' + remoteStream.getId());
         streamsMap.set(remoteStream.getId(), remoteStream);
-        if (!positions.big || !streamsMap.has(positions.big.getId())) {
+        if (!positions.big || !streamsMap.has(positions.big.getId()) || positions.big.getId() === remoteStream.getId()) {
           positions.big = remoteStream;
           streamPositions[remoteStream.getId()] = 'big';
           remoteStream.play("big");
