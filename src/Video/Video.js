@@ -12,6 +12,7 @@ let remotes = [];
 let chatChannel = null;
 let recognition = null;
 let streams = [];
+const streamsMap = new Map();
 let positions = {
   big: null,
   small1: null,
@@ -178,17 +179,7 @@ export default function video(client) {
       localStream.init(
         function () {
           console.log("getUserMedia successfully");
-          streams.push(localStream);
-          if (positions.big) {
-            localStream.play("small" + (streams.length - 1));
-            positions["small" + (streams.length - 1)] = localStream;
-            streamPositions[localStream.getId()] =
-              "small" + (streams.length - 1);
-          } else {
-            localStream.play("big");
-            positions.big = localStream;
-            streamPositions[localStream.getId()] = "big";
-          }
+          localStream.play("me");
           recognition = new webkitSpeechRecognition();
           recognition.continuous = true;
           if (language === 'en') {
@@ -221,61 +212,42 @@ export default function video(client) {
         });
       });
       client.on("peer-leave", function (evt) {
-        var remoteStream = positions[streamPositions[evt.uid]];
+        var remoteStream = streamsMap.get(evt.uid);
         console.log("Stream removed: " + remoteStream.getId());
         try {
         if(remoteStream!=localStream)
         {
+          streamsMap.delete(evt.uid);
           remoteStream.stop();
+          
          }
         } catch(err) {
             console.log("peer-leave remote stream stop error");
         }
-        if (streams.length == 1) {
-            if (remoteStream != localStream){
-                const bigSteam = positions.big;
-                bigSteam.stop();
-                localStream.play('big');
-                bigSteam.play(streamPositions[localStream.getId()]);
-            }else{
-                localStream.play('big');
-                bigSteam.play(streamPositions[localStream.getId()]);
-            }
-            for (i=0;i<streams.length;i++){
-                sstream = positions['small' + i];
-                sstream.stop();
-            }
-        }
+        // if (streams.length == 1) {
+        //     if (remoteStream != localStream){
+        //         const bigSteam = positions.big;
+        //         bigSteam.stop();
+        //         localStream.play('big');
+        //         bigSteam.play(streamPositions[localStream.getId()]);
+        //     }else{
+        //         localStream.play('big');
+        //         bigSteam.play(streamPositions[localStream.getId()]);
+        //     }
+        //     for (i=0;i<streams.length;i++){
+        //         sstream = positions['small' + i];
+        //         sstream.stop();
+        //     }
+        // }
         
-        const lastStream = positions['small' + (streams.length - 1)];
+        const lastStream = positions['small' + streamsMap.size];
         if (lastStream === remoteStream) {
-          positions["small" + (streams.length - 1)] = null;
-          remoteStream.play('big');
-          bigSteam.play(streamPositions[remoteStream.getId()]);
-          lastStream.play('big');
-          bigSteam.play(streamPositions[lastStream.getId()]);
+          positions["small" + streamsMap.size] = null;
           return;
         }
-        var index = streams.indexOf(remoteStream);
-        if (index > -1) {
-          streams.splice(index, 1);
-        }
-        positions[streamPositions[remoteStream.getId()]] = null;
         lastStream.stop();
-        lastStream.play(streamPositions[remoteStream.getId()]);
-      });
-      client.on("active-speaker", function (evt) {
-        // var remoteStream = positions[streamPositions[evt.uid]];
-        // if (!remoteStream) return;
-        // console.log("active-speaker: " + remoteStream.getId());
-        // if (positions.big === remoteStream) return;
-        // const bigSteam = positions.big;
-        // remoteStream.stop();
-        // bigSteam.stop();
-        // remoteStream.play("big");
-        // bigSteam.play(streamPositions[remoteStream.getId()]);
-        // positions.big = remoteStream;
-        // positions[streamPositions[remoteStream.getId()]] = localStream;
+        lastStream.play(streamPositions[evt.uid]);
+        positions[streamPositions[evt.uid]] = lastStream;
       });
       client.on("stream-subscribed", function (evt) {
         var remoteStream = evt.stream;
@@ -283,21 +255,16 @@ export default function video(client) {
           "Subscribe remote stream successfully: " + remoteStream.getId()
         );
         // remoteStream.play('remote' + remoteStream.getId());
-        streams.push(remoteStream);
-        if (positions.big === localStream) {
-          localStream.stop();
-          localStream.play("small" + (streams.length - 1));
-          positions["small" + (streams.length - 1)] = localStream;
-          streamPositions[localStream.getId()] = "small" + (streams.length - 1);
-          remoteStream.play("big");
+        streamsMap.set(remoteStream.getId(), remoteStream);
+        if (!positions.big || !streamsMap.has(positions.big.getId())) {
           positions.big = remoteStream;
-          streamPositions[remoteStream.getId()] = "big";
-        } else {
-          remoteStream.play("small" + (streams.length - 1));
-          positions["small" + (streams.length - 1)] = remoteStream;
-          streamPositions[remoteStream.getId()] =
-            "small" + (streams.length - 1);
+          streamPositions[remoteStream.getId()] = 'big';
+          remoteStream.play("big");
+          return;
         }
+        remoteStream.play("small" + (streamsMap.size - 1));
+        positions["small" + (streamsMap.size - 1)] = remoteStream;
+        streamPositions[remoteStream.getId()] = "small" + (streamsMap.size - 1);
         if (differentLanguage.has(remoteStream.getId())) {
           console.log('muting ' + remoteStream.getId());
           remoteStream.muteAudio();
@@ -374,7 +341,7 @@ function startTranscribe(language) {
 function translateLanguage(text, config) {
   console.log('translate ' + text);
   config = config || {};
-  var api_key = config.api_key || "";
+  var api_key = config.api_key || "AIzaSyC2ofxKSA9xOM7V9XEjQW5-Ps0eSRXgLgE";
 
   var newScript = document.createElement("script");
   newScript.type = "text/javascript";
