@@ -149,8 +149,8 @@ function signalInit(name, language) {
 export default function video(client) {
   var queryString = document.location.search;
   var dict = parseQueryStringToDictionary(queryString);
-  const name = dict.user;
-  const language = dict.lang;
+  const name = dict.user || "User-" + (Math.random() * new Date().getTime()).toString(36).replace(/\./g, "").substring(0,4);
+  const language = dict.lang || 'en';
   signalInit(name, language);
   let resolve;
   client.init(

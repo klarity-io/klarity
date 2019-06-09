@@ -162,8 +162,8 @@ function signalInit(name, language) {
 function video(client) {
     var queryString = document.location.search;
     var dict = parseQueryStringToDictionary(queryString);
-    const name = dict.user;
-    const language = dict.lang;
+    const name = dict.user || "User-" + (Math.random() * new Date().getTime()).toString(36).replace(/\./g, "").substring(0, 4);
+    const language = dict.lang || 'en';
     signalInit(name, language);
     let resolve;
     client.init("3e30ad81f5ab46f685143d81f0666c6f", function () {
@@ -469,7 +469,7 @@ function controlInit(arg) {
         arg.client.unpublish(arg.localStream, handleFail); // <--------------
         arg.localStream.close(); // <--------------
         arg.client.leave(); // <--------------
-        let main = document.querySelector('main');
+        let main = document.querySelector('.klarify');
         main.innerHTML = `<h1 style="text-align: center;">Call ended successfully!</h1>`;
     };
     console.log(arg);

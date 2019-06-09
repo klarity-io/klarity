@@ -57,7 +57,7 @@ export default function controlInit(arg) {
         arg.localStream.close();                                                    // <--------------
         arg.client.leave();                                                         // <--------------
 
-        let main = document.querySelector('main');
+        let main = document.querySelector('.klarify');
         main.innerHTML=`<h1 style="text-align: center;">Call ended successfully!</h1>`
     };
 
