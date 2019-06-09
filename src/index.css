@@ -9,6 +9,7 @@ body {
 }
 .klarify{
     padding: 0!important;
+    overflow: hidden;
 }
 .wrapper {
     background: #f9f9f9;
@@ -47,7 +48,7 @@ body {
 }
 .message {
     padding-top: 15px;
-    width: 90%;
+    width: 100%;
 }
 .logo {
     width: 30px;
@@ -71,7 +72,7 @@ body {
     font-weight: bold;
 }
 .own {
-    float: right;
+    /* float: right; */
 }
 .own:after {
     content: " ";
@@ -99,16 +100,16 @@ body {
     left: 0;
 }
 .vid-wrapper {
-    padding: 8px;
+    /* padding: 8px; */
     position: relative;
     text-align: center;
 }
 .master .vid-wrapper {
-    padding: 1.5% 8px;
+    /* padding: 1.5% 8px; */
 }
 .master .video {
     width: 100%;
-    height: calc(100vh - 200px);
+    height: 100%;
 }
 .speaker {
     font-weight: bold;
@@ -134,4 +135,8 @@ body {
     font-weight: bold;
     font-size: 1.5rem;
     z-index: 2;
+}
+
+#rightcol {
+    max-width: 300px;
 }

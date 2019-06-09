@@ -189,7 +189,7 @@ export default function video(client) {
           }
           recognition.interimResults = true;
           startTranscribe(language);
-          // Controls({localStream: localStream, recognition: recognition, client: client});
+          Controls({localStream: localStream, recognition: recognition, client: client});
           client.publish(localStream, function (err) {
             console.log("Publish local stream error: " + err);
           });
