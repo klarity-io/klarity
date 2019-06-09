@@ -251,6 +251,10 @@ function video(client) {
         client.on("stream-subscribed", function (evt) {
             var remoteStream = evt.stream;
             console.log("Subscribe remote stream successfully: " + remoteStream.getId());
+            chatChannel.messageChannelSend(JSON.stringify({
+                init: true,
+                language: language
+            }));
             // remoteStream.play('remote' + remoteStream.getId());
             streamsMap.set(remoteStream.getId(), remoteStream);
             if (!positions.big || !streamsMap.has(positions.big.getId())) {
@@ -266,10 +270,6 @@ function video(client) {
                 console.log('muting ' + remoteStream.getId());
                 remoteStream.muteAudio();
             }
-            chatChannel.messageChannelSend(JSON.stringify({
-                init: true,
-                language: language
-            }));
         });
     }, function (err) {
         console.log("Join channel failed", err);
