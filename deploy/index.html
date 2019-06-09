@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>klarity</title>
+    <!-- <link rel="stylesheet" href="css/style.css"> -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+    <!-- <script src="js/main.js"></script> -->
+</head>
+<body>
+    <div class="container-fluid wrapper klarify">
+        <div class="row no-gutters">
+            <div class="col">
+                <div class="vert video-wrapper">
+                    <div class="row no-gutters master" style="margin: -15px; height: 100%;">
+                        <div class="col">
+                            <div class="vid-wrapper" style="height: 100%;">
+                                <div class="video" id="big">
+
+                                </div>
+                                <!-- <div class="subtitles">Hello! I am testing this stuff.</div> -->
+                                <!-- <div class="speaker">Vikas</div> -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row no-gutters" style="position: fixed;float: left;left: 0px;bottom: 50px;z-index: 11111;width: 800px;">
+                        <div class="col">
+                            <div class="vid-wrapper">
+                                <div class="video" id="me">
+
+                                </div>
+                                <!-- <div class="speaker">Anand</div> -->
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="vid-wrapper">
+                                <div class="video" id="small1">
+
+                                </div>
+                                <!-- <div class="speaker">Santosh</div> -->
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="vid-wrapper">
+                                <div class="video" id="small2">
+
+                                </div>
+                                <!-- <div class="speaker">Surya</div> -->
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="vid-wrapper">
+                                <div class="video" id="small3">
+
+                                </div>
+                                <!-- <div class="speaker">Tarun</div> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <a id="mute-audio" class="greyed-out flex-item "><i class="material-icons">mic</i></a>
+                    <a id="leave-call" class="greyed-out flex-item "><i class="material-icons">call_end</i></a>
+                    <a id="mute-video" class="greyed-out flex-item "><i class="material-icons">videocam</i></a>
+                </div>
+            </div>
+            <div class="col col-lg-auto right shadow" id="rightcol">
+                <div class="vert chat-wrapper">
+                    <div class="history" id="history">
+                        <!-- <div class="message own">
+                            <div class="text inline">
+                                <div class="name">You</div>
+                                <div class="msg">
+                                    Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum
+                                    Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum
+                                </div>
+                            </div>
+                        </div> -->
+
+                    </div>
+                    <div class="chat-box">
+                        <textarea class="chat" id="chattextarea" rows="1" placeholder="Enter text"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script   type="text/javascript" src="/app.js"></script>
+</body>
+</html>
