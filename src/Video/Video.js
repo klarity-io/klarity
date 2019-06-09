@@ -266,6 +266,10 @@ export default function video(client) {
           positions.big = remoteStream;
           streamPositions[remoteStream.getId()] = 'big';
           remoteStream.play("big");
+          if (differentLanguage.has(remoteStream.getId())) {
+            console.log('muting ' + remoteStream.getId());
+            remoteStream.muteAudio();
+          }
           return;
         }
         remoteStream.play("small" + (streamsMap.size - 1));
