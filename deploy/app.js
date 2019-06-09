@@ -93,14 +93,14 @@ function removeVideoStream(evt) {
 let handleFail = function (err) {
     console.log("Error : ", err);
 };
-function signalInit(name, language) {
+function signalInit(name, language, roomName) {
     const signalClient = AgoraSig_1_4_0_1.default("3e30ad81f5ab46f685143d81f0666c6f");
     // const queryString = location.search.split("=");
     // const name = queryString[1] ? queryString[1] : null;
     const session = signalClient.login(name, "_no_need_token");
     session.onLoginSuccess = function (uid) {
         /* Join a channel. */
-        var channel = session.channelJoin("abcd5");
+        var channel = session.channelJoin(roomName);
         channel.onChannelJoined = function () {
             chatChannel = channel;
             chatChannel.messageChannelSend(JSON.stringify({
@@ -164,7 +164,8 @@ function video(client) {
     var dict = parseQueryStringToDictionary(queryString);
     const name = dict.user || "User-" + (Math.random() * new Date().getTime()).toString(36).replace(/\./g, "").substring(0, 4);
     const language = dict.lang || 'en';
-    signalInit(name, language);
+    const roomName = dict.room || 'abcd123';
+    signalInit(name, language, roomName);
     let resolve;
     client.init("3e30ad81f5ab46f685143d81f0666c6f", function () {
         console.log("AgoraRTC client initialized");
@@ -172,7 +173,7 @@ function video(client) {
         console.log("AgoraRTC client init failed", err);
     });
     // Start coding here
-    client.join("3e30ad81f5ab46f685143d81f0666c6f", "abcd5", name, function (uid) {
+    client.join("3e30ad81f5ab46f685143d81f0666c6f", roomName, name, function (uid) {
         localStream = agora_rtc_sdk_1.default.createStream({
             streamID: uid,
             audio: true,

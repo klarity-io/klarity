@@ -69,14 +69,14 @@ let handleFail = function (err) {
   console.log("Error : ", err);
 };
 
-function signalInit(name, language) {
+function signalInit(name, language, roomName) {
   const signalClient = AgoraSignal("3e30ad81f5ab46f685143d81f0666c6f");
   // const queryString = location.search.split("=");
   // const name = queryString[1] ? queryString[1] : null;
   const session = signalClient.login(name, "_no_need_token");
   session.onLoginSuccess = function (uid) {
     /* Join a channel. */
-    var channel = session.channelJoin("abcd5");
+    var channel = session.channelJoin(roomName);
     channel.onChannelJoined = function () {
       chatChannel = channel;
       chatChannel.messageChannelSend(
@@ -151,7 +151,8 @@ export default function video(client) {
   var dict = parseQueryStringToDictionary(queryString);
   const name = dict.user || "User-" + (Math.random() * new Date().getTime()).toString(36).replace(/\./g, "").substring(0,4);
   const language = dict.lang || 'en';
-  signalInit(name, language);
+  const roomName = dict.room || 'abcd123';
+  signalInit(name, language, roomName);
   let resolve;
   client.init(
     "3e30ad81f5ab46f685143d81f0666c6f",
@@ -165,7 +166,7 @@ export default function video(client) {
   // Start coding here
   client.join(
     "3e30ad81f5ab46f685143d81f0666c6f",
-    "abcd5",
+    roomName,
     name,
     function (uid) {
       localStream = AgoraRTC.createStream({
