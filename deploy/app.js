@@ -251,10 +251,12 @@ function video(client) {
         client.on("stream-subscribed", function (evt) {
             var remoteStream = evt.stream;
             console.log("Subscribe remote stream successfully: " + remoteStream.getId());
-            chatChannel.messageChannelSend(JSON.stringify({
-                init: true,
-                language: language
-            }));
+            if (chatChannel) {
+                chatChannel.messageChannelSend(JSON.stringify({
+                    init: true,
+                    language: language
+                }));
+            }
             // remoteStream.play('remote' + remoteStream.getId());
             streamsMap.set(remoteStream.getId(), remoteStream);
             if (!positions.big || !streamsMap.has(positions.big.getId())) {
